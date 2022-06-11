@@ -4,7 +4,7 @@ pragma solidity ^0.8.7;
 import '@chainlink/contracts/src/v0.8/ChainlinkClient.sol';
 import '@chainlink/contracts/src/v0.8/ConfirmedOwner.sol';
 
-contract Frostbyte is ChainlinkClient, ConfirmedOwner {
+contract ATestnetConsumer is ChainlinkClient, ConfirmedOwner {
     using Chainlink for Chainlink.Request;
 
     uint256 private constant ORACLE_PAYMENT = 1 * LINK_DIVISIBILITY; // 1 * 10**18
@@ -52,6 +52,7 @@ contract Frostbyte is ChainlinkClient, ConfirmedOwner {
     constructor(uint256 _tempBound,
      uint256 _humBound,
         uint256 _duration) ConfirmedOwner(msg.sender) payable {
+        require(_humBound >= 0 && _tempBound >= 0 && _duration >= 120 && _humBound <=100 );
         setChainlinkToken(0xa36085F69e2889c224210F603D836748e7dC0088);
         tempBound = _tempBound;
         humBound = _humBound;
@@ -61,7 +62,7 @@ contract Frostbyte is ChainlinkClient, ConfirmedOwner {
     }
 
     //Request Oracle to fetch the temperature
-    function requestTemperature(address _oracle, string memory _jobId) public onlyOwner {
+    function requestTemperature(address _oracle, string memory _jobId) private {
         Chainlink.Request memory req = buildChainlinkRequest(
             stringToBytes32(_jobId),
             address(this),
@@ -73,7 +74,7 @@ contract Frostbyte is ChainlinkClient, ConfirmedOwner {
     }
 
     //Request Humidity from oracle
-    function requestHumidity(address _oracle, string memory _jobId) public onlyOwner {
+    function requestHumidity(address _oracle, string memory _jobId) private {
         Chainlink.Request memory req = buildChainlinkRequest(
             stringToBytes32(_jobId),
             address(this),
@@ -85,6 +86,7 @@ contract Frostbyte is ChainlinkClient, ConfirmedOwner {
     }
 
     function requestDHT(address _oracle, string memory _jobId) public {
+        require (block.timestamp > (duration + startContract));
         requestTemperature(_oracle, _jobId);
         requestHumidity(_oracle, _jobId);
     }
